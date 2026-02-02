@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import Button from "@/components/ui/Button";
 
 type Message = {
   id: string;
@@ -27,6 +29,7 @@ export default function ChatThreadClient({ userId }: Props) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const title = useMemo(
     () => `Chat with ${resolvedUserId ?? ""}`,
@@ -38,7 +41,7 @@ export default function ChatThreadClient({ userId }: Props) {
     resolvedUserId.length > 0 &&
     resolvedUserId !== "undefined";
 
-  const loadThread = async () => {
+  const loadThread = useCallback(async () => {
     if (!isValidUserId) {
       setLoading(false);
       setError("Missing or invalid userId.");
@@ -47,6 +50,7 @@ export default function ChatThreadClient({ userId }: Props) {
 
     setLoading(true);
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch(`/api/chat/threads/${resolvedUserId}`, {
         cache: "no-store",
@@ -56,12 +60,13 @@ export default function ChatThreadClient({ userId }: Props) {
         throw new Error(data?.error || "Failed to load thread");
       }
       setMessages(data);
+      setNotice(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
-  };
+  }, [isValidUserId, resolvedUserId]);
 
   const send = async () => {
     if (!body.trim() || !isValidUserId) {
@@ -70,6 +75,7 @@ export default function ChatThreadClient({ userId }: Props) {
 
     setSending(true);
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch("/api/chat/messages", {
         method: "POST",
@@ -82,6 +88,7 @@ export default function ChatThreadClient({ userId }: Props) {
       }
       setBody("");
       await loadThread();
+      setNotice("Message sent.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -112,44 +119,96 @@ export default function ChatThreadClient({ userId }: Props) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [resolvedUserId, isValidUserId]);
+  }, [resolvedUserId, isValidUserId, loadThread]);
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">{title}</h1>
-          <p className="text-sm text-zinc-500">
-            Messages are ordered oldest to newest.
-          </p>
+      <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/chat"
+              className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 transition hover:bg-zinc-50"
+            >
+              Back
+            </Link>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-sm font-semibold text-zinc-600">
+              {resolvedUserId?.slice(0, 2)?.toUpperCase() || "CH"}
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-zinc-900">{title}</h1>
+              <p className="text-sm text-zinc-500">
+                Messages are ordered oldest to newest.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" className="px-3 py-1 text-xs">
+              Call
+            </Button>
+            <Button variant="ghost" className="px-3 py-1 text-xs">
+              Video
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={loadThread}
+              disabled={loading || !isValidUserId}
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
-        <button
-          onClick={loadThread}
-          className="rounded-md border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-          disabled={loading || !isValidUserId}
-        >
-          Refresh
-        </button>
       </div>
 
-      <div className="flex-1 overflow-auto rounded-lg border border-zinc-200 bg-white p-4">
+      <div
+        className="flex-1 overflow-auto rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
+        aria-live="polite"
+      >
         {loading ? (
-          <p className="text-sm text-zinc-500">Loading thread…</p>
+          <div className="space-y-3">
+            <div className="h-12 w-2/3 animate-pulse rounded-2xl bg-zinc-100" />
+            <div className="ml-auto h-12 w-1/2 animate-pulse rounded-2xl bg-zinc-100" />
+            <div className="h-12 w-3/4 animate-pulse rounded-2xl bg-zinc-100" />
+          </div>
         ) : messages.length === 0 ? (
-          <p className="text-sm text-zinc-500">No messages yet.</p>
+          <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-500">
+            No messages yet. Say hello to start the conversation.
+          </div>
         ) : (
-          <ul className="space-y-3">
-            {messages.map((message) => (
-              <li
-                key={message.id}
-                className="rounded-lg border border-zinc-100 bg-zinc-50 p-3"
-              >
-                <p className="text-sm text-zinc-800">{message.body}</p>
-                <p className="mt-2 text-xs text-zinc-500">
-                  {new Date(message.created_at).toLocaleString()}
-                </p>
-              </li>
-            ))}
+          <ul className="space-y-4">
+            {messages.map((message) => {
+              const fromOther = message.sender_id === resolvedUserId;
+              return (
+                <li
+                  key={message.id}
+                  className={`flex ${fromOther ? "justify-start" : "justify-end"}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-3xl border px-4 py-3 text-sm shadow-sm ${
+                      fromOther
+                        ? "border-zinc-200 bg-zinc-50 text-zinc-800"
+                        : "border-zinc-900 bg-zinc-900 text-white"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3 text-xs">
+                      <span
+                        className={`rounded-full px-2 py-1 ${
+                          fromOther
+                            ? "bg-white text-zinc-500"
+                            : "bg-white/10 text-white/80"
+                        }`}
+                      >
+                        {fromOther ? "Them" : "You"}
+                      </span>
+                      <span className={fromOther ? "text-zinc-400" : "text-white/70"}>
+                        {new Date(message.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed">{message.body}</p>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -159,26 +218,41 @@ export default function ChatThreadClient({ userId }: Props) {
           Missing or invalid userId. Open /chat and enter a valid user UUID.
         </div>
       ) : error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           {error}
+        </div>
+      ) : notice ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700"
+        >
+          {notice}
         </div>
       ) : null}
 
-      <div className="flex items-center gap-2">
-        <input
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-          placeholder="Type a message…"
-          className="flex-1 rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
-          disabled={!isValidUserId}
-        />
-        <button
-          onClick={send}
-          disabled={sending || !isValidUserId}
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
-        >
-          {sending ? "Sending…" : "Send"}
-        </button>
+      <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" className="px-3 py-2 text-xs">
+            +
+          </Button>
+          <input
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            placeholder="Type a message…"
+            className="flex-1 rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+            disabled={!isValidUserId}
+          />
+          <Button onClick={send} disabled={sending || !isValidUserId}>
+            {sending ? "Sending…" : "Send"}
+          </Button>
+        </div>
+        <p className="mt-2 text-xs text-zinc-500">
+          Tip: Press Enter to send once keyboard support is added.
+        </p>
       </div>
     </div>
   );

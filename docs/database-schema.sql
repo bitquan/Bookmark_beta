@@ -129,6 +129,9 @@ alter table public.notifications enable row level security;
 alter table public.progress enable row level security;
 alter table public.posts enable row level security;
 alter table public.follows enable row level security;
+alter table public.comments enable row level security;
+alter table public.likes enable row level security;
+alter table public.curriculum_items enable row level security;
 
 -- Profiles: read for authenticated users, update only self
 create policy "profiles_select_authenticated" on public.profiles
@@ -200,4 +203,65 @@ create policy "follows_delete_own" on public.follows
 for delete
 using (auth.uid() = follower_id);
 
+-- Comments
+create policy "comments_select_authenticated" on public.comments
+for select
+using (auth.role() = 'authenticated');
+
+create policy "comments_insert_own" on public.comments
+for insert
+with check (auth.uid() = user_id);
+
+-- Likes
+create policy "likes_select_authenticated" on public.likes
+for select
+using (auth.role() = 'authenticated');
+
+create policy "likes_insert_own" on public.likes
+for insert
+with check (auth.uid() = user_id);
+
+create policy "likes_delete_own" on public.likes
+for delete
+using (auth.uid() = user_id);
+
+-- Curriculum items
+create policy "curriculum_select_own" on public.curriculum_items
+for select
+using (auth.uid() = user_id);
+
+create policy "curriculum_insert_own" on public.curriculum_items
+for insert
+with check (auth.uid() = user_id);
+
+create policy "curriculum_update_own" on public.curriculum_items
+for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+create policy "curriculum_delete_own" on public.curriculum_items
+for delete
+using (auth.uid() = user_id);
+
 -- TODO: Add indices for common queries
+create index if not exists idx_profiles_username on public.profiles (username);
+create index if not exists idx_books_external_id on public.books (external_id);
+create index if not exists idx_books_title on public.books (title);
+create index if not exists idx_curriculum_items_user_id on public.curriculum_items (user_id);
+create index if not exists idx_curriculum_items_status on public.curriculum_items (status);
+create index if not exists idx_curriculum_items_tags on public.curriculum_items using gin (tags);
+create index if not exists idx_progress_user_id on public.progress (user_id);
+create index if not exists idx_progress_item_id on public.progress (curriculum_item_id);
+create index if not exists idx_follows_follower_id on public.follows (follower_id);
+create index if not exists idx_follows_following_id on public.follows (following_id);
+create index if not exists idx_posts_user_id on public.posts (user_id);
+create index if not exists idx_posts_created_at on public.posts (created_at desc);
+create index if not exists idx_comments_post_id on public.comments (post_id);
+create index if not exists idx_comments_user_id on public.comments (user_id);
+create index if not exists idx_likes_post_id on public.likes (post_id);
+create index if not exists idx_likes_user_id on public.likes (user_id);
+create index if not exists idx_messages_sender_id on public.messages (sender_id);
+create index if not exists idx_messages_recipient_id on public.messages (recipient_id);
+create index if not exists idx_messages_created_at on public.messages (created_at desc);
+create index if not exists idx_notifications_user_id on public.notifications (user_id);
+create index if not exists idx_notifications_created_at on public.notifications (created_at desc);

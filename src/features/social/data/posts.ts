@@ -53,5 +53,45 @@ export async function getFeed() {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  const posts = data ?? [];
+  if (posts.length === 0) {
+    return [];
+  }
+
+  const postIds = posts.map((post) => post.id);
+
+  const [{ data: likeRows, error: likeError }, { data: commentRows, error: commentError }] =
+    await Promise.all([
+      supabase.from("likes").select("post_id,user_id").in("post_id", postIds),
+      supabase.from("comments").select("post_id").in("post_id", postIds),
+    ]);
+
+  if (likeError) {
+    throw new Error(likeError.message);
+  }
+  if (commentError) {
+    throw new Error(commentError.message);
+  }
+
+  const likeCounts = new Map<string, number>();
+  const likedByMe = new Set<string>();
+
+  (likeRows ?? []).forEach((row) => {
+    likeCounts.set(row.post_id, (likeCounts.get(row.post_id) ?? 0) + 1);
+    if (row.user_id === authData.user.id) {
+      likedByMe.add(row.post_id);
+    }
+  });
+
+  const commentCounts = new Map<string, number>();
+  (commentRows ?? []).forEach((row) => {
+    commentCounts.set(row.post_id, (commentCounts.get(row.post_id) ?? 0) + 1);
+  });
+
+  return posts.map((post) => ({
+    ...post,
+    likeCount: likeCounts.get(post.id) ?? 0,
+    commentCount: commentCounts.get(post.id) ?? 0,
+    likedByMe: likedByMe.has(post.id),
+  }));
 }

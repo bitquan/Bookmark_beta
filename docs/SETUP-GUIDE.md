@@ -27,6 +27,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 OPEN_LIBRARY_BASE_URL=https://openlibrary.org
 ```
 
+> Do not commit .env.local. Keep secrets out of git.
+
 > Use `NEXT_PUBLIC_*` only for variables safe to expose to the client.
 
 ## 3) Supabase Setup

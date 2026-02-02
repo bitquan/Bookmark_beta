@@ -2,6 +2,8 @@
 
 A social learning platform that helps you track your learning journey, connect with curious minds, and discover new knowledge together.
 
+![CI](https://github.com/bitquan/Bookmark_beta/actions/workflows/ci.yml/badge.svg)
+
 ## 🌟 Features
 
 ### 📖 Learning Management
@@ -83,6 +85,33 @@ cd Bookmark_beta
 npm install
 ```
 
+### Local Development (Supabase CLI)
+
+1. **Start local Supabase**
+
+```bash
+npm run supabase:start
+```
+
+2. **Apply migrations and seed**
+
+```bash
+npm run supabase:reset
+```
+
+3. **Update .env.local for local Supabase**
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<local publishable key from `supabase status`>
+```
+
+4. **Start the app**
+
+```bash
+npm run dev
+```
+
 3. **Set up environment variables**
 
 Create a `.env.local` file in the root directory:
@@ -91,6 +120,7 @@ Create a `.env.local` file in the root directory:
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 # Optional APIs
 OPEN_LIBRARY_BASE_URL=https://openlibrary.org
@@ -113,6 +143,43 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) to see your app.
 
 ---
+
+## ✅ Testing
+
+Run the test suite:
+
+```bash
+npm run test
+```
+
+Watch mode:
+
+```bash
+npm run test:watch
+```
+
+### E2E (Playwright)
+
+```bash
+npm run test:e2e
+```
+
+### Bundle analysis
+
+```bash
+npm run analyze
+```
+
+## ✅ Release checklist
+
+Before deploying:
+
+- Run `npm run lint`, `npm run test`, `npm run typecheck`, and `npm run build`.
+- Confirm Supabase migrations have been applied.
+- Verify environment variables in production (Supabase + site URL).
+- Manually smoke-test: auth, feed, chat, curriculum, progress, profile.
+
+See [docs/QA-CHECKLIST.md](docs/QA-CHECKLIST.md) for the full checklist.
 
 ## 📂 Project Structure
 

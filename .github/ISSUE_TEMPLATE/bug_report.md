@@ -1,0 +1,24 @@
+---
+name: Bug report
+about: Report a reproducible issue
+labels: bug
+---
+
+## Description
+
+## Steps to reproduce
+1.
+2.
+3.
+
+## Expected behavior
+
+## Actual behavior
+
+## Screenshots (optional)
+
+## Environment
+- OS:
+- Node:
+- Browser:
+- Supabase: local/cloud
