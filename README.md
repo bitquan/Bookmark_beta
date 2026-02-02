@@ -144,6 +144,26 @@ Open [http://localhost:3000](http://localhost:3000) to see your app.
 
 ---
 
+## 🚀 Deployment (Vercel)
+
+1. **Push to GitHub**
+2. **Import repo in Vercel**
+3. **Set environment variables (Production + Preview)**
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-prod-anon-key>
+NEXT_PUBLIC_SITE_URL=https://<your-vercel-domain>
+OPEN_LIBRARY_BASE_URL=https://openlibrary.org
+```
+
+4. **Deploy**
+5. **Share the Vercel URL with testers**
+
+> Note: The local `.env.local` uses the local Supabase URL. For Vercel, always use the hosted Supabase project URL + anon key.
+
+---
+
 ## ✅ Testing
 
 Run the test suite:
