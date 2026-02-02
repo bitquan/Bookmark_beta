@@ -7,7 +7,7 @@ A social learning platform that helps you track your learning journey, connect w
 ### 📖 Learning Management
 - **Curriculum Builder**: Create and organize your personal learning curriculum
 - **Progress Tracking**: Track your progress through books, courses, articles, and videos
-- **Book Integration**: Import book metadata from Goodreads and Open Library APIs
+- **Book Integration**: Import book metadata from Open Library API
 - **Smart Categories**: Organize learning items by topics, tags, and status
 
 ### 👥 Social Features
@@ -47,7 +47,7 @@ A social learning platform that helps you track your learning journey, connect w
 - **API**: RESTful API with Next.js Route Handlers
 
 ### External APIs
-- **Books**: Goodreads API, Open Library API
+- **Books**: Open Library API
 - **Social**: Twitter/X API (for sharing)
 - **RSS**: Custom RSS feed parser
 
@@ -93,7 +93,7 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 # Optional APIs
-GOODREADS_API_KEY=your_goodreads_key
+OPEN_LIBRARY_BASE_URL=https://openlibrary.org
 ```
 
 4. **Set up the database**
