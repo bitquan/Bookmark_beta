@@ -278,7 +278,7 @@ export default function CurriculumManager() {
                           item.status === "done"
                             ? "success"
                             : item.status === "in-progress"
-                            ? "secondary"
+                            ? "warning"
                             : "muted"
                         }
                       >
